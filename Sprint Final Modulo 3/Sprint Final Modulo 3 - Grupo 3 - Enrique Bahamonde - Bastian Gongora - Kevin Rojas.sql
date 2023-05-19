@@ -47,11 +47,29 @@ CREATE TABLE producto(
 	nombre_producto VARCHAR(100),
     precio INT NOT NULL,
     categoria VARCHAR(50) NOT NULL,
-    rut_proveedor VARCHAR(10) NOT NULL,
-    color VARCHAR(25) NOT NULL,
-    stock INT NOT NULL,
-    FOREIGN KEY (rut_proveedor) references proveedor(rut_proveedor)
+    color VARCHAR(25) NOT NULL    
 );
+
+-- TABLAS INTERMEDIAS
+
+CREATE TABLE producto_proveedor(
+	id_producto VARCHAR(10) NOT NULL,
+    rut_proveedor VARCHAR(10) NOT NULL,
+    stock INT NOT NULL,
+    FOREIGN KEY (id_producto) references producto(id_producto),
+    FOREIGN KEY (rut_proveedor) references proveedor(rut_proveedor),
+    PRIMARY KEY (id_producto,rut_proveedor)
+);
+
+CREATE TABLE producto_cliente(
+	id_producto VARCHAR(10) NOT NULL,
+    rut_cliente VARCHAR(10) NOT NULL,
+    fecha_registro DATETIME DEFAULT NOW(),
+    FOREIGN KEY (id_producto) references producto(id_producto),
+    FOREIGN KEY (rut_cliente) references cliente(rut_cliente),
+    PRIMARY KEY (id_producto,rut_cliente)
+);
+
 
 -- INSERT 5 PROVEEDORES A LA BASE DE DATOS
 INSERT INTO proveedor() VALUES 
@@ -94,17 +112,32 @@ INSERT INTO cliente () VALUES
 
 -- INSERT 10 PRODUCTOS A LA BASE DE DATOS
 INSERT INTO producto () VALUES
-  ('P1', 'iPhone 12 Pro Max', 500000 , 'Teléfonos', '78191530-0', 'Gris Espacial', 50),
-  ('P2', 'Samsung QLED 4K TV', 300000 , 'Televisores', '78530520-2', 'Negro', 20),
-  ('P3', 'MacBook Pro 13"', 1500000, 'Laptops', '78530520-2', 'Plata', 30),
-  ('P4', 'Canon EOS R6',200000, 'Cámaras',   '77890525-K', 'Negro', 15),
-  ('P5', 'JBL Flip 5', 65000, 'Altavoces', '79555444-0', 'Azul', 10),
-  ('P6', 'JBL Flip 5', 68000, 'Altavoces', '74123456-9', 'Azul', 4),
-  ('P7', 'Apple Watch Series 7', 150000, 'Smartwatches', '74123456-9', 'Plateado', 8),
-  ('P8', 'iPad Air', 400000, 'Tabletas', '77890525-K', 'Gris Espacial', 12),
-  ('P9', 'HP OfficeJet Pro 9015', 90000 , 'Impresoras', '78191530-0', 'Blanco', 7),
-  ('P10', 'iPhone 12 Pro Max', 550000 , 'Teléfonos', '74123456-9', 'Gris Espacial', 5)  
+  ('P1', 'iPhone 12 Pro Max', 500000 , 'Teléfonos', 'Gris Espacial'),
+  ('P2', 'Samsung QLED 4K TV', 300000 , 'Televisores', 'Negro'),
+  ('P3', 'MacBook Pro 13"', 1500000, 'Laptops', 'Plata'),
+  ('P4', 'Canon EOS R6',200000, 'Cámaras', 'Negro'),
+  ('P5', 'JBL Flip 5', 65000, 'Altavoces', 'Azul'),
+  ('P6', 'JBL Flip 5', 68000, 'Altavoces',  'Azul'),
+  ('P7', 'Apple Watch Series 7', 150000, 'Smartwatches', 'Plateado'),
+  ('P8', 'iPad Air', 400000, 'Tabletas',  'Gris Espacial'),
+  ('P9', 'HP OfficeJet Pro 9015', 90000 , 'Impresoras', 'Blanco'),
+  ('P10', 'iPhone 12 Pro Max', 550000 , 'Teléfonos',  'Gris Espacial')  
   ;
+  
+    
+  -- INSERT PRODUCTO PROVEEDOR
+  INSERT INTO producto_proveedor() values
+	('P1','78191530-0',50),
+	('P2','78530520-2',40),
+    ('P3','77890525-K',30),
+	('P4','79555444-0',20),
+	('P5','74123456-9',80),			
+	('P6','74123456-9',60),
+	('P7','74123456-9',70),
+	('P8','79555444-0',100),
+	('P9','78530520-2',5),
+	('P10','74123456-9',15)
+;
   
 -- CONSULTAS SQL
 -- Cuál es la categoría de productos que más se repite
@@ -117,9 +150,9 @@ LIMIT 1;
 
 -- Cuáles son los productos con mayor stock
 -- Se busca el producto que tenga más stock
-SELECT * FROM producto WHERE stock = (SELECT MAX(stock) FROM producto) ORDER BY stock DESC;
+SELECT * FROM producto_proveedor WHERE stock = (SELECT MAX(stock) FROM producto_proveedor) ORDER BY stock DESC;
 -- Muestra los 5 productos con más stock
-SELECT id_producto, nombre_producto, stock FROM producto ORDER BY stock DESC LIMIT 5;
+SELECT * FROM producto_proveedor ORDER BY stock DESC LIMIT 5;
 
 -- Qué color de producto es más común en nuestra tienda.
 SELECT color AS 'Color que más se repite'
@@ -130,16 +163,13 @@ LIMIT 1;
 
 
 -- Cual o cuales son los proveedores con menor stock de productos.
--- Solucion con JOIN
-SELECT p.rut_proveedor, p.nombre_rep, p.nombre_corporativo, MIN(pr.stock) AS menor_stock
-FROM proveedor p JOIN producto pr ON p.rut_proveedor = pr.rut_proveedor 
-GROUP BY p.rut_proveedor, p.nombre_rep HAVING MIN(pr.stock) = (SELECT MIN(stock) FROM producto);
 
--- Solucion con INNER JOIN
-SELECT a.rut_proveedor, b.nombre_corporativo
-FROM producto a INNER JOIN proveedor b ON a.rut_proveedor = b.rut_proveedor WHERE a.stock = (SELECT MIN(stock) FROM producto) ORDER BY a.stock DESC;
-
-
+SELECT a.rut_proveedor as 'RUT PROVEEDOR', b.nombre_rep as 'NOMBRE REPRESENTANTE LEGAL', b.nombre_corporativo as 'NOMBRE CORPORATIVO',SUM(a.stock) AS 'STOCK TOTAL'
+FROM producto_proveedor a
+JOIN proveedor b ON a.rut_proveedor = b.rut_proveedor
+GROUP BY a.rut_proveedor, b.nombre_rep
+ORDER BY SUM(a.stock) ASC
+LIMIT 1;
 
 
 -- Cambien la categoría de productos más popular por ‘Electrónica y computación’.
