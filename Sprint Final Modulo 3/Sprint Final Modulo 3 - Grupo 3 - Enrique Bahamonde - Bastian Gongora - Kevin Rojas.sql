@@ -139,6 +139,9 @@ INSERT INTO producto () VALUES
 	('P10','74123456-9',15)
 ;
   
+  
+-- NO SE INSERTAN REGISTROS EN TABLA PRODUCTO_CLIENTE YA QUE NO SE NECESITAN PARA SOLUCION DEL PROBLEMA  
+  
 -- CONSULTAS SQL
 -- Cuál es la categoría de productos que más se repite
   
